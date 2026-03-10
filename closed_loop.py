@@ -131,7 +131,6 @@ if __name__ == "__main__":
     model_path = os.path.join(cfg.base.model_base, cfg.scenario.scene_name)
     model_config = OmegaConf.load(os.path.join(model_path, 'cfg.yaml'))
     cfg.update(model_config)
-    
     output = os.path.join(cfg.base.output_dir, cfg.scenario.scene_name+"_"+cfg.scenario.mode)
     os.makedirs(output, exist_ok=True)
 
@@ -143,6 +142,12 @@ if __name__ == "__main__":
         ad_path = cfg.base.ltf_path
     else:
         raise NotImplementedError
+
+    # print(cfg.base.output_dir)
+    # print(cfg.scenario.scene_name)
+    # print(cfg.scenario.mode)
+    # print(output)
+    # a=1/0
     
     process = launch(ad_path, args.ad_cuda, output)
     try:

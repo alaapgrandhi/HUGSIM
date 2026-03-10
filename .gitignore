@@ -2,6 +2,7 @@
 .vscode
 .idea
 .DS_Store
+.cursor
 .nfs*
 __pycache__
 *.pth
@@ -10,6 +11,7 @@ build
 shell
 private
 apex
+slurm*
 # pixi environments
 .pixi
 *.egg-info

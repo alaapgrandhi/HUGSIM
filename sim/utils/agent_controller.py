@@ -300,7 +300,7 @@ class AttackPlanner:
 
 
 class ConstantPlanner:
-    def __init__(self):
+    def __init__(self, **kwargs):
         return
 
     def update(self, state, dt):

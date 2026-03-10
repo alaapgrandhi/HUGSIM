@@ -35,10 +35,11 @@ class HUGSimEnv(gymnasium.Env):
         
         plan_list = cfg.scenario.plan_list
         for control_param in plan_list:
-            control_param[5] = os.path.join(cfg.base.realcar_path, control_param[5])
+            # control_param[5] = os.path.join(cfg.base.realcar_path, control_param[5])
+            control_param[5] = os.path.join(cfg.base.realcar_path,control_param[5].replace("/postprocess/shadow.pth", ""))
 
-        # read ground infos
-        with open(os.path.join(cfg.model_path, 'ground_param.pkl'), 'rb') as f:
+        _gpath = os.path.join(cfg.model_path, 'ground_param.pkl')
+        with open(_gpath, 'rb') as f:
             #numpy.ndarray, float, list
             cam_poses, cam_heights, commands = pickle.load(f)
             cam_poses, commands = dense_cam_poses(cam_poses, commands)

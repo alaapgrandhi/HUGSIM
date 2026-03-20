@@ -4,7 +4,7 @@ from copy import deepcopy
 import gymnasium
 from gymnasium import spaces
 from copy import deepcopy
-from sim.utils.sim_utils import create_cam, rt2pose, pose2rt, load_camera_cfg, dense_cam_poses
+from sim.utils.sim_utils import create_cam, rt2pose, pose2rt, pose2rt_quat, load_camera_cfg, dense_cam_poses
 from scipy.spatial.transform import Rotation as SCR
 from sim.utils.score_calculator import create_rectangle, bg_collision_det
 import os
@@ -240,7 +240,7 @@ class HUGSimEnv(gymnasium.Env):
                 }
     
     def _get_info(self):
-        wego_r, wego_t = pose2rt(self.ego)
+        wego_r, wego_t = pose2rt_quat(self.ego)
         cam_poses, _, commands = self.ground_model
         dist = np.sum((cam_poses[:, :3, 3] - self.vt) ** 2, axis=-1)
         nearest_cam_idx = np.argmin(dist)

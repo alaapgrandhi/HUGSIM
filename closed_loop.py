@@ -114,6 +114,9 @@ if __name__ == "__main__":
     parser.add_argument("--kinematic_path", type=str, required=True)
     parser.add_argument('--ad', default="uniad")
     parser.add_argument('--ad_cuda', default="1")
+    parser.add_argument('--ad_checkpoint_path', type=str, default=None)
+    parser.add_argument('--output_dir', type=str, default=None)
+    parser.add_argument('--image_size', type=int, nargs=2, default=None)
     args = parser.parse_args()
 
     scenario_config = OmegaConf.load(args.scenario_path)
@@ -131,7 +134,10 @@ if __name__ == "__main__":
     model_path = os.path.join(cfg.base.model_base, cfg.scenario.scene_name)
     model_config = OmegaConf.load(os.path.join(model_path, 'cfg.yaml'))
     cfg.update(model_config)
-    output = os.path.join(cfg.base.output_dir, cfg.scenario.scene_name+"_"+cfg.scenario.mode)
+    if args.output_dir is not None:
+        output = os.path.join(args.output_dir, cfg.scenario.scene_name+"_"+cfg.scenario.mode)
+    else:
+        output = os.path.join(cfg.base.output_dir, cfg.scenario.scene_name+"_"+cfg.scenario.mode)
     os.makedirs(output, exist_ok=True)
 
     if args.ad == 'uniad':
@@ -142,14 +148,8 @@ if __name__ == "__main__":
         ad_path = cfg.base.ltf_path
     else:
         raise NotImplementedError
-
-    # print(cfg.base.output_dir)
-    # print(cfg.scenario.scene_name)
-    # print(cfg.scenario.mode)
-    # print(output)
-    # a=1/0
     
-    process = launch(ad_path, args.ad_cuda, output)
+    process = launch(ad_path, args.ad_cuda, output, args.ad_checkpoint_path, args.image_size)
     try:
         create_gym_env(cfg, output)
         check_alive(process)

@@ -15,6 +15,11 @@ def pose2rt(pose, degrees=False):
     r = SCR.from_matrix(pose[:3, :3]).as_euler('XYZ', degrees=degrees)
     t = pose[:3, 3]
     return r, t
+
+def pose2rt_quat(pose, degrees=False):
+    r = SCR.from_matrix(pose[:3, :3]).as_quat()
+    t = pose[:3, 3]
+    return r, t
     
 def load_camera_cfg(cfg):
     cam_params = {}

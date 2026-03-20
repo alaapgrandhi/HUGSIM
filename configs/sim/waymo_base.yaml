@@ -1,6 +1,8 @@
-realcar_path: /network/scratch/g/grandhia/hugsim_data/3DRealCar
-model_base: /network/scratch/g/grandhia/hugsim_data/scenes/waymo
+# realcar_path: /network/scratch/g/grandhia/hugsim_data/3DRealCar
+# model_base: /network/scratch/g/grandhia/hugsim_data/scenes/waymo
+realcar_path: /network/scratch/g/grandhia/hugsim_data_old/3DRealCar
+model_base: /network/scratch/g/grandhia/hugsim_data_old/scenes/waymo
 uniad_path: /home/mila/g/grandhia/UniAD_Sim/tools/e2e.sh
 vad_path: /home/mila/g/grandhia/VAD_Sim/tools/e2e.sh
 ltf_path: /home/mila/g/grandhia/NAVSIM/ltf_e2e.sh
-output_dir: /network/scratch/g/grandhia/hugsim_output/benchmark/out_official/waymo_
+output_dir: /network/scratch/g/grandhia/hugsim_output/benchmark/out_debug/waymo_

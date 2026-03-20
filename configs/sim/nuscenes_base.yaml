@@ -1,9 +1,11 @@
-realcar_path: /network/scratch/g/grandhia/hugsim_data/3DRealCar
-model_base: /network/scratch/g/grandhia/hugsim_data/scenes/nuscenes
+# realcar_path: /network/scratch/g/grandhia/hugsim_data/3DRealCar
+# model_base: /network/scratch/g/grandhia/hugsim_data/scenes/nuscenes
+realcar_path: /network/scratch/g/grandhia/hugsim_data_old/3DRealCar
+model_base: /network/scratch/g/grandhia/hugsim_data_old/scenes/nuscenes
 uniad_path: /home/mila/g/grandhia/UniAD_Sim/tools/e2e.sh
 vad_path:  /home/mila/g/grandhia/VAD_Sim/tools/e2e.sh
 ltf_path: /home/mila/g/grandhia/NAVSIM/ltf_e2e.sh
-output_dir: /network/scratch/g/grandhia/hugsim_output/benchmark/out_official/nuscenes_
+output_dir: /network/scratch/g/grandhia/hugsim_output/benchmark/out_debug/nuscenes_
 HD_map:
-  path: /network/scratch/g/grandhia/hugsim_data/nusc_map_cache
+  path: /network/scratch/g/grandhia/hugsim_data_old/nusc_map_cache
   version: nusc_trainval

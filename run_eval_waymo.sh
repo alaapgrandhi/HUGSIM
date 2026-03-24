@@ -1,7 +1,8 @@
 # pixi shell
 module load cuda/11.8/cudnn/8.9
+export PYTHONNOUSERSITE=1
 sim_cuda=0
-ad_cuda=1
+ad_cuda=0
 
 # change this variable as the scenario path on your machine
 scenario_dir=/network/scratch/g/grandhia/hugsim_data_old/scenarios/waymo/

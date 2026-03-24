@@ -1,12 +1,13 @@
-pixi shell
+# pixi shell
 module load cuda/11.8/cudnn/8.9
+export PYTHONNOUSERSITE=1
 sim_cuda=0
-ad_cuda=1
+ad_cuda=0
 
 # change this variable as the scenario path on your machine
 scenario_dir=/network/scratch/g/grandhia/hugsim_data_old/scenarios/nuscenes/
-output_base=/network/scratch/g/grandhia/hugsim_output/benchmark/out_debug_mini/nuscenes_ltf
-ad_checkpoint_path=/home/mila/g/grandhia/NAVSIM/ckpts/drivor_mini.ckpt
+output_base=/network/scratch/l/luke.rowe/hugsim_output/benchmark/out_test_setup/nuscenes_ltf
+ad_checkpoint_path=/network/scratch/g/grandhia/hugsim_data/drivor_Nav2_10epochs.pth
 
 for cfg in ${scenario_dir}/*.yaml; do
     basename=$(basename ${cfg} .yaml)                                  # scene-021-easy-00 or scene-021_easy_00
@@ -29,5 +30,5 @@ for cfg in ${scenario_dir}/*.yaml; do
                         --ad_cuda ${ad_cuda} \
                         --ad_checkpoint_path ${ad_checkpoint_path} \
                         --output_dir ${output_base} \
-                        --image_size 434 252
+                        --image_size 1142 672
 done

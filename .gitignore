@@ -16,3 +16,5 @@ slurm*
 # pixi environments
 .pixi
 *.egg-info
+sbatch*.out
+sbatch*.err

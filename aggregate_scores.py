@@ -41,6 +41,18 @@ def _iter_eval_json_paths(dataset_dir: str) -> Iterable[str]:
             yield os.path.join(root, "eval.json")
 
 
+def _iter_immediate_subdirs(parent_dir: str) -> Iterable[str]:
+    """Yield immediate child directories under parent_dir (non-recursive)."""
+    try:
+        names = os.listdir(parent_dir)
+    except FileNotFoundError:
+        return
+    for name in sorted(names):
+        p = os.path.join(parent_dir, name)
+        if os.path.isdir(p):
+            yield p
+
+
 def _infer_difficulty_from_path(path: str) -> Optional[str]:
     # Prefer parent folder name (matches how outputs are structured).
     parent = os.path.basename(os.path.dirname(path))
@@ -76,6 +88,13 @@ def collect_scores(output_root: str, dataset_subdirs: Optional[List[str]] = None
         ds_dir = os.path.join(output_root, ds)
         if not os.path.isdir(ds_dir):
             continue
+
+        # If the dataset directory contains scenario subfolders, report which of those
+        # did not produce an eval.json (common cause of count mismatches).
+        for scenario_dir in _iter_immediate_subdirs(ds_dir):
+            if not os.path.isfile(os.path.join(scenario_dir, "eval.json")):
+                print(f"[warn] missing eval.json in {scenario_dir}", file=sys.stderr)
+
         for eval_path in _iter_eval_json_paths(ds_dir):
             diff = _infer_difficulty_from_path(eval_path)
             if diff is None:

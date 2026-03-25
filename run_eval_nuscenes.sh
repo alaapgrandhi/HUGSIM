@@ -6,8 +6,17 @@ ad_cuda=0
 
 # change this variable as the scenario path on your machine
 scenario_dir=/network/scratch/g/grandhia/hugsim_data_old/scenarios/nuscenes/
-output_base=/network/scratch/l/luke.rowe/hugsim_output/benchmark/out_test_setup/nuscenes_ltf
-ad_checkpoint_path=/network/scratch/g/grandhia/hugsim_data/drivor_Nav2_10epochs.pth
+default_output_base=/network/scratch/l/luke.rowe/hugsim_output/benchmark/out_test_setup/nuscenes_ltf
+default_ad_checkpoint_path=/network/scratch/g/grandhia/hugsim_data/drivor_Nav2_10epochs.pth
+
+# Optional overrides:
+# - args: run_eval_nuscenes.sh [/path/to.ckpt] [/path/to/output_base]
+# - env:  CHECKPOINT_PATH=... OUTPUT_BASE=...
+ad_checkpoint_path="${1:-${CHECKPOINT_PATH:-$default_ad_checkpoint_path}}"
+output_base="${2:-${OUTPUT_BASE:-$default_output_base}}"
+
+echo "ad_checkpoint_path=${ad_checkpoint_path}"
+echo "output_base=${output_base}"
 
 for cfg in ${scenario_dir}/*.yaml; do
     basename=$(basename ${cfg} .yaml)                                  # scene-021-easy-00 or scene-021_easy_00
@@ -30,5 +39,5 @@ for cfg in ${scenario_dir}/*.yaml; do
                         --ad_cuda ${ad_cuda} \
                         --ad_checkpoint_path ${ad_checkpoint_path} \
                         --output_dir ${output_base} \
-                        --image_size 1142 672
+                        --image_size 434 252
 done

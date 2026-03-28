@@ -18,3 +18,4 @@ slurm*
 *.egg-info
 sbatch*.out
 sbatch*.err
+videos_*/

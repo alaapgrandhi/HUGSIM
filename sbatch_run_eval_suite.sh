@@ -5,15 +5,15 @@
 #SBATCH --time=48:00:00
 #SBATCH --partition=main
 #SBATCH --job-name=hugsim-eval-suite
-#SBATCH --output=sbatch_eval_suite-config_mar27.out
-#SBATCH --error=sbatch_eval_suite-config_mar27.err
+#SBATCH --output=sbatch_eval_suite-config_mar27_2.out
+#SBATCH --error=sbatch_eval_suite-config_mar27_2.err
 
 set -euo pipefail
 
 cd "${SLURM_SUBMIT_DIR}"
 
-CHECKPOINT_PATH="/network/scratch/l/luke.rowe/experiments/config_mar27/checkpoints/last_drivor_compatible.ckpt"
-OUTPUT_BASE="/network/scratch/l/luke.rowe/hugsim_output/benchmark/config_mar27"
+CHECKPOINT_PATH="/network/scratch/l/luke.rowe/experiments/config_mar27_2/checkpoints/last.ckpt"
+OUTPUT_BASE="/network/scratch/l/luke.rowe/hugsim_output/benchmark/config_mar27_2"
 
 export CHECKPOINT_PATH
 export OUTPUT_BASE

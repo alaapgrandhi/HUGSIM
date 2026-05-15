@@ -13,8 +13,14 @@ from sim.utils.launch_ad import launch, check_alive
 from omegaconf import OmegaConf
 import open3d as o3d
 from sim.utils.score_calculator import hugsim_evaluate
+from sim.utils.viz_utils import render_overlaid_video, render_bev_video
 import numpy as np
 from moviepy import ImageSequenceClip
+
+# Diagnostic: when set, bypass the iLQR controller and teleport the ego directly
+# onto the model's predicted trajectory (one sim step per frame). Isolates
+# whether closed-loop failure is the controller's fault or the model's.
+TELEPORT = os.getenv('DRIVOR_TELEPORT', '').strip().lower() in ('1', 'true', 'yes')
 
 def to_video(observations, output_path):
     frames = []
@@ -31,7 +37,7 @@ def create_gym_env(cfg, output):
 
     env = gymnasium.make('hugsim_env/HUGSim-v0', cfg=cfg, output=output)
 
-    observations_save, infos_save = [], []
+    observations_save, infos_save, plan_trajs_save = [], [], []
     obs, info = env.reset()
     done = False
     cnt = 0
@@ -59,11 +65,14 @@ def create_gym_env(cfg, output):
             pipe.write(pickle.dumps((obs, info)))
         with open(plan_pipe, "rb") as pipe:
             plan_traj = pickle.loads(pipe.read())
+        plan_trajs_save.append(plan_traj)
 
         if plan_traj is not None:
-            acc, steer_rate = traj2control(plan_traj, info)
-
-            action = {'acc': acc, 'steer_rate': steer_rate}
+            if TELEPORT:
+                action = {'teleport': plan_traj}
+            else:
+                acc, steer_rate = traj2control(plan_traj, info)
+                action = {'acc': acc, 'steer_rate': steer_rate}
             obs, reward, terminated, truncated, info = env.step(action)
             cnt += 1
             done = terminated or truncated or cnt > 400
@@ -71,6 +80,8 @@ def create_gym_env(cfg, output):
         else:  # AD Side Crushed
             done = True
 
+        if plan_traj is None:
+            continue
         imu_plan_traj = plan_traj[:, [1, 0]]
         imu_plan_traj[:, 1] *= -1
         global_traj = traj_transform_to_global(imu_plan_traj, info['ego_box'])
@@ -91,18 +102,35 @@ def create_gym_env(cfg, output):
     with open(obs_pipe, "wb") as pipe:
         pipe.write(pickle.dumps('Done'))
 
+    # Skip the full eval+viz pipeline when no frames were stepped (e.g. the AD
+    # side sent None on the first iteration for a one-frame diagnostic sweep).
+    # hugsim_evaluate crashes on empty save_data['frames'], so guard explicitly.
+    if not save_data['frames']:
+        print('[closed_loop] no frames stepped; skipping eval + viz')
+        return
+
     with open(os.path.join(output, 'data.pkl'), 'wb') as wf:
         pickle.dump([save_data], wf)
-        
-    to_video(observations_save, os.path.join(output, 'video.mp4'))
     with open(os.path.join(output, 'infos.pkl'), 'wb') as wf:
         pickle.dump(infos_save, wf)
-    
+
     ground_xyz = np.asarray(o3d.io.read_point_cloud(os.path.join(output, 'ground.ply')).points)
     scene_xyz = np.asarray(o3d.io.read_point_cloud(os.path.join(output, 'scene.ply')).points)
     results = hugsim_evaluate([save_data], ground_xyz, scene_xyz)
     with open(os.path.join(output, 'eval.json'), 'w') as f:
         json.dump(results, f)
+
+    # Visualization -- purely additive; wrapped so a viz failure can never
+    # block the eval outputs (data.pkl / infos.pkl / eval.json) saved above.
+    try:
+        render_overlaid_video(observations_save, infos_save, plan_trajs_save,
+                              os.path.join(output, 'video.mp4'))
+    except Exception as e:
+        print(f'[viz] overlaid video.mp4 failed: {e}')
+    try:
+        render_bev_video(save_data, ground_xyz, os.path.join(output, 'video_bev.mp4'))
+    except Exception as e:
+        print(f'[viz] video_bev.mp4 failed: {e}')
 
 
 if __name__ == "__main__":

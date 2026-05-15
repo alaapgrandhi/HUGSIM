@@ -1,0 +1,12 @@
+# Copy of nuscenes_base.yaml with `ltf_path` pointed at the feature-dump AD
+# script (dump_e2e.sh) instead of ltf_e2e.sh. Used by dump_drivor_features_hugsim.sh
+# so the feature dump runs through the exact closed_loop.py pipeline as a real eval.
+realcar_path: /network/scratch/g/grandhia/hugsim_data_old/3DRealCar
+model_base: /network/scratch/g/grandhia/hugsim_data_old/scenes/nuscenes
+uniad_path: /home/mila/g/grandhia/UniAD_Sim/tools/e2e.sh
+vad_path:  /home/mila/g/grandhia/VAD_Sim/tools/e2e.sh
+ltf_path: /home/mila/l/luke.rowe/gigapixel-dev/HUGSIM_ltf/dump_e2e.sh
+output_dir: /network/scratch/l/luke.rowe/hugsim_output/feature_dump/out_test_setup/nuscenes_ltf
+HD_map:
+  path: /network/scratch/g/grandhia/hugsim_data_old/nusc_map_cache
+  version: nusc_trainval

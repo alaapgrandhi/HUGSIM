@@ -278,16 +278,57 @@ class HUGSimEnv(gymnasium.Env):
         self.timestamp += self.dt
         if self.planner is not None:
             self.render_kwargs['planning'] = self.planner.plan_traj(self.timestamp, self.ego_state)
-        steer_rate, acc = action['steer_rate'], action['acc']
-        self.last_steer_rate, self.last_accel = steer_rate, acc
         L = self.kinematic['Lr'] + self.kinematic['Lf']
-        self.velo += acc * self.dt
-        self.steer += steer_rate * self.dt
-        theta = self.vr[1]
-        # print(theta / np.pi * 180, self.steer / np.pi * 180)
-        self.vab[0] = self.vab[0] + self.velo * np.sin(theta) * self.dt
-        self.vab[1] = self.vab[1] + self.velo * np.cos(theta) * self.dt
-        self.vr[1] = theta + self.velo * np.tan(self.steer) / L * self.dt
+        if 'teleport' in action:
+            # Diagnostic: bypass the iLQR and place the ego directly on the
+            # model's predicted trajectory, so closed-loop failure can be
+            # attributed to the controller vs the model. plan_traj is (N,2) in
+            # the ego/lidar frame (col0 rightward, col1 forward). DrivoR
+            # waypoints are 0.5s apart; sim dt is 0.25s, so advance to the t=dt
+            # pose by linear interp of the first segment (origin -> wp0).
+            plan_traj = np.asarray(action['teleport'], dtype=np.float64)
+            TRAJ_DT = 0.5
+            frac = self.dt / TRAJ_DT
+            dright = frac * plan_traj[0, 0]
+            dfwd = frac * plan_traj[0, 1]
+            # Heading delta from chord direction, pi-folded so reverse motion
+            # keeps the ego facing forward (mirrors traj2control's fold).
+            heading_delta = np.arctan2(dright, dfwd)
+            reverse = False
+            if heading_delta > np.pi / 2:
+                heading_delta -= np.pi
+                reverse = True
+            elif heading_delta < -np.pi / 2:
+                heading_delta += np.pi
+                reverse = True
+            dist = np.hypot(dright, dfwd)
+            new_velo = (-dist if reverse else dist) / self.dt
+            # ego-frame (right, fwd) -> world (a, b) displacement at heading theta
+            theta = self.vr[1]
+            self.vab[0] = self.vab[0] + dright * np.cos(theta) + dfwd * np.sin(theta)
+            self.vab[1] = self.vab[1] - dright * np.sin(theta) + dfwd * np.cos(theta)
+            self.vr[1] = theta + heading_delta
+            # Reconstruct velo/accel by finite diff so the AD-side ego_status
+            # carries true executed-motion quantities (puffer semantics), not
+            # iLQR commands. After the heading rotation, motion is purely
+            # forward in the new ego frame (no slip), so the correct steer for
+            # the dataparser's `yaw = -ego_steer` projection is 0 -- otherwise
+            # an inverse-kinematic reconstruction blows up at low velocity and
+            # corrupts vel_y/acc_y.
+            self.last_accel = (new_velo - self.velo) / self.dt
+            self.velo = new_velo
+            self.last_steer_rate = (0.0 - self.steer) / self.dt
+            self.steer = 0.0
+        else:
+            steer_rate, acc = action['steer_rate'], action['acc']
+            self.last_steer_rate, self.last_accel = steer_rate, acc
+            self.velo += acc * self.dt
+            self.steer += steer_rate * self.dt
+            theta = self.vr[1]
+            # print(theta / np.pi * 180, self.steer / np.pi * 180)
+            self.vab[0] = self.vab[0] + self.velo * np.sin(theta) * self.dt
+            self.vab[1] = self.vab[1] + self.velo * np.cos(theta) * self.dt
+            self.vr[1] = theta + self.velo * np.tan(self.steer) / L * self.dt
 
         terminated = False
         reward = 0

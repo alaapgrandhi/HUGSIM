@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
-#SBATCH -c 8
-#SBATCH --mem=48G
+#SBATCH -c 6
+#SBATCH --mem=32G
 #SBATCH --gres=gpu:a100l:1
-#SBATCH --time=24:00:00
-#SBATCH --partition=main
+#SBATCH --time=48:00:00
+#SBATCH --partition=unkillable
+#SBATCH --exclude=cn-k003
 #SBATCH --job-name=hugsim-eval-suite
-#SBATCH --output=sbatch_eval_suite-config_may13_3.out
-#SBATCH --error=sbatch_eval_suite-config_may13_3.err
+#SBATCH --output=sbatch_eval_suite-config_may18_2.out
+#SBATCH --error=sbatch_eval_suite-config_may18_2.err
 
 set -euo pipefail
 
 cd "${SLURM_SUBMIT_DIR}"
 
-CHECKPOINT_PATH="/network/scratch/l/luke.rowe/experiments/config_may13_3/checkpoints/last_drivor_compatible.ckpt"
-OUTPUT_BASE="/network/scratch/l/luke.rowe/hugsim_output/benchmark/config_may13_3"
+CHECKPOINT_PATH="/network/scratch/l/luke.rowe/experiments/config_may_18_2/checkpoints/last.ckpt"
+OUTPUT_BASE="/network/scratch/l/luke.rowe/hugsim_output/benchmark/config_may18_2"
 
 export CHECKPOINT_PATH
 export OUTPUT_BASE
@@ -24,6 +25,7 @@ export OUTPUT_BASE
 # export DRIVOR_PAD_LW=0
 # export DRIVOR_REWARD_COND=0
 # export DRIVOR_REAR_AXLE_SHIFT=0
+# export DRIVOR_ORIGINAL_CAMERA_ORDER=1
 
 pixi run bash run_eval_kitti.sh
 pixi run bash run_eval_waymo.sh

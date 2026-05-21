@@ -53,6 +53,23 @@ def _iter_immediate_subdirs(parent_dir: str) -> Iterable[str]:
             yield p
 
 
+def load_filter_scenarios(filter_dir: str) -> set:
+    """Collect scenario folder names found anywhere under filter_dir.
+
+    Walks the directory recursively and records every subdirectory's basename, so
+    the filter works whether filter_dir is a flat directory of scenario folders or
+    mirrors the output_root/<dataset>/<scenario> nesting. Matching is done purely
+    by folder name (see collect_scores).
+    """
+    if not os.path.isdir(filter_dir):
+        raise FileNotFoundError(f"filter_dir does not exist or is not a directory: {filter_dir}")
+    names: set = set()
+    for root, dirs, _files in os.walk(filter_dir):
+        for d in dirs:
+            names.add(d)
+    return names
+
+
 def _infer_difficulty_from_path(path: str) -> Optional[str]:
     # Prefer parent folder name (matches how outputs are structured).
     parent = os.path.basename(os.path.dirname(path))
@@ -74,7 +91,11 @@ def _read_eval_json(path: str) -> Tuple[float, float]:
     return float(data["rc"]), float(data["hdscore"])
 
 
-def collect_scores(output_root: str, dataset_subdirs: Optional[List[str]] = None) -> List[ScenarioScore]:
+def collect_scores(
+    output_root: str,
+    dataset_subdirs: Optional[List[str]] = None,
+    filter_scenarios: Optional[set] = None,
+) -> List[ScenarioScore]:
     if not os.path.isdir(output_root):
         raise FileNotFoundError(f"output_root does not exist or is not a directory: {output_root}")
 
@@ -92,10 +113,16 @@ def collect_scores(output_root: str, dataset_subdirs: Optional[List[str]] = None
         # If the dataset directory contains scenario subfolders, report which of those
         # did not produce an eval.json (common cause of count mismatches).
         for scenario_dir in _iter_immediate_subdirs(ds_dir):
+            if filter_scenarios is not None and os.path.basename(scenario_dir) not in filter_scenarios:
+                continue
             if not os.path.isfile(os.path.join(scenario_dir, "eval.json")):
                 print(f"[warn] missing eval.json in {scenario_dir}", file=sys.stderr)
 
         for eval_path in _iter_eval_json_paths(ds_dir):
+            scenario_name = os.path.basename(os.path.dirname(eval_path))
+            if filter_scenarios is not None and scenario_name not in filter_scenarios:
+                # Scenario not present in the filter directory -- skip it.
+                continue
             diff = _infer_difficulty_from_path(eval_path)
             if diff is None:
                 # Skip files we can't bucket reliably.
@@ -183,6 +210,15 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         help="Comma-separated list of dataset subdirs to include. Default: include all subdirs found.",
     )
     p.add_argument(
+        "--filter_dir",
+        type=str,
+        default="",
+        help=(
+            "If set, only aggregate scenarios whose folder name also appears under this "
+            "directory. Matching is by scenario folder name only."
+        ),
+    )
+    p.add_argument(
         "--decimals",
         type=int,
         default=1,
@@ -195,7 +231,16 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = parse_args(argv)
     dataset_subdirs = [d.strip() for d in args.datasets.split(",") if d.strip()] or None
 
-    scores = collect_scores(args.output_root, dataset_subdirs=dataset_subdirs)
+    filter_scenarios = load_filter_scenarios(args.filter_dir) if args.filter_dir else None
+    if filter_scenarios is not None:
+        print(
+            f"[info] filtering to {len(filter_scenarios)} scenario folder name(s) from {args.filter_dir}",
+            file=sys.stderr,
+        )
+
+    scores = collect_scores(
+        args.output_root, dataset_subdirs=dataset_subdirs, filter_scenarios=filter_scenarios
+    )
     if not scores:
         print(
             "No eval.json files found. Check --output_root and that evaluations finished.",

@@ -38,6 +38,6 @@ for cfg in ${scenario_dir}/*.yaml; do
                         --ad_cuda ${ad_cuda} \
                         --ad_checkpoint_path ${ad_checkpoint_path} \
                         --output_dir ${output_base} \
-                        --image_size 434 252
+                        --image_size 1148 672
 
 done

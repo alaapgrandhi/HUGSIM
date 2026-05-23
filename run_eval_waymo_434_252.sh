@@ -1,8 +1,8 @@
 # pixi shell
 module load cuda/11.8/cudnn/8.9
 export PYTHONNOUSERSITE=1
-sim_cuda=0
-ad_cuda=0
+sim_cuda="${SIM_CUDA:-0}"
+ad_cuda="${AD_CUDA:-$sim_cuda}"
 
 # change this variable as the scenario path on your machine
 scenario_dir=/network/scratch/g/grandhia/hugsim_data_old/scenarios/waymo/
@@ -19,11 +19,14 @@ echo "ad_checkpoint_path=${ad_checkpoint_path}"
 echo "output_base=${output_base}"
 
 for cfg in ${scenario_dir}/*.yaml; do
-    basename=$(basename ${cfg} .yaml)           # scene-021-easy-00
-    dirname=${basename#scene-}                   # 021-easy-00
-    dirname=${dirname//-/_}                      # 021_easy_00
+    # Resume support: derive the output dir the same way closed_loop.py does --
+    # {scene_name}_{mode}, both read from inside the yaml. Deriving it from the
+    # filename is unreliable (e.g. waymo scene_name has an extra _0_200 segment).
+    scene_name=$(sed -nE "s/^scene_name:[[:space:]]*[\"']?([^\"']*)[\"']?[[:space:]]*\$/\1/p" "${cfg}")
+    mode=$(sed -nE "s/^mode:[[:space:]]*[\"']?([^\"']*)[\"']?[[:space:]]*\$/\1/p" "${cfg}")
+    dirname="${scene_name}_${mode}"
 
-    if [ -f "${output_base}/${dirname}/eval.json" ]; then
+    if [[ -f "${output_base}/${dirname}/eval.json" ]]; then
         echo "SKIP (already complete): ${cfg}"
         continue
     fi

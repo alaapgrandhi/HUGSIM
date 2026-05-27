@@ -362,5 +362,7 @@ class HUGSimEnv(gymnasium.Env):
         info = self._get_info()
         info['rc'] = rc
         info['collision'] = bg_collision or fg_collision
-        
+        info['fg_collision'] = fg_collision
+        info['bg_collision'] = bg_collision
+
         return observation, reward, terminated, False, info

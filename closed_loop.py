@@ -96,6 +96,9 @@ def create_gym_env(cfg, output):
                 'timestep': 0.5
             },
             'collision': info['collision'],
+            'fg_collision': info.get('fg_collision', False),
+            'bg_collision': info.get('bg_collision', False),
+            'ego_velo': info['ego_velo'],
             'rc': info['rc']
         })
 

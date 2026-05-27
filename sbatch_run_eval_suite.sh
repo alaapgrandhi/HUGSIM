@@ -6,15 +6,15 @@
 #SBATCH --partition=short-unkillable
 #SBATCH --exclude=cn-k003
 #SBATCH --job-name=hugsim-eval-suite
-#SBATCH --output=sbatch_eval_suite-config_may22_1.out
-#SBATCH --error=sbatch_eval_suite-config_may22_1.err
+#SBATCH --output=sbatch_eval_suite-config_may26_3.out
+#SBATCH --error=sbatch_eval_suite-config_may26_3.err
 
 set -euo pipefail
 
 cd "${SLURM_SUBMIT_DIR}"
 
-CHECKPOINT_PATH="/network/scratch/l/luke.rowe/experiments/config_may22_1/checkpoints/drivor_compatible_last.ckpt"
-OUTPUT_BASE="/network/scratch/l/luke.rowe/hugsim_output/benchmark/config_may22_1"
+CHECKPOINT_PATH="/network/scratch/l/luke.rowe/experiments/config_may26_3/drivor_compatible_last.ckpt"
+OUTPUT_BASE="/network/scratch/l/luke.rowe/hugsim_output/benchmark/config_may26_3"
 
 export CHECKPOINT_PATH
 export OUTPUT_BASE
@@ -26,7 +26,7 @@ export OUTPUT_BASE
 # export DRIVOR_REWARD_COND=0
 # export DRIVOR_REAR_AXLE_SHIFT=0
 # export DRIVOR_ORIGINAL_CAMERA_ORDER=1
-export DRIVOR_PROPOSAL_NUM=64
+export DRIVOR_PROPOSAL_NUM=1
 
 # Run the four eval scripts in parallel, one per GPU.
 # SIM_CUDA picks the physical GPU; per-dataset logs avoid interleaved output.
